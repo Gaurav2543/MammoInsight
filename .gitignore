@@ -1,0 +1,3 @@
+*logs/
+*test_results*
+wandb/

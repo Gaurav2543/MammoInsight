@@ -15,15 +15,13 @@ class Config:
     """Master configuration for MammoFormer training."""
 
     # ── Project / Logging ────────────────────────────────────────────────
-    PROJECT_NAME: str = "MammoSight"
-    RUN_NAME: str = "MammoSight_unc_wt"
-    # RUN_NAME: str = "MammoSight_unc_wt_test2"
+    PROJECT_NAME: str = "MammoInsight"
+    RUN_NAME: str = "MammoInight_best_wo_rsna"
 
     # ── Paths ────────────────────────────────────────────────────────────
     CSV_PATH: str = "mammo-bench_master_split.csv"
     IMAGE_ROOT: str = "/data/gaurav.bhole/FullDataset/"
-    MODEL_SAVE_DIR: str = "/data/gaurav.bhole/MammoSight_unc_wt_checkpoints/"
-    # MODEL_SAVE_DIR: str = "/data/gaurav.bhole/MammoSight_unc_wt_test2/"
+    MODEL_SAVE_DIR: str = "/data/gaurav.bhole/MammoInsight_best_wo_rsna_checkpoints/"
     SAM_CHECKPOINT: Optional[str] = "/data/gaurav.bhole/pretrained_models/sam-med2d_b.pth"
 
     # ── Backbone ─────────────────────────────────────────────────────────
@@ -77,12 +75,19 @@ class Config:
     NUM_ABNORMALITY_CLASSES: int = 3  # Normal / Mass / Calcification
     NUM_MOLECULAR_CLASSES: int = 4  # LumA / LumB / HER2 / TripleNeg
 
-    # ── Class weights (inverse-frequency, from training distribution) ────────────
-    SEVERITY_WEIGHTS    : List[float] = field(default_factory=lambda: [0.32, 1.00, 2.68])   # Normal, Benign, Malignant
-    DENSITY_WEIGHTS     : List[float] = field(default_factory=lambda: [2.19, 0.65, 0.44, 2.57])  # A, B, C, D
-    BIRADS_WEIGHTS      : List[float] = field(default_factory=lambda: [0.62, 0.16, 0.57, 2.67, 2.92, 4.17])  # 0,1,2,3,4,5
-    ABNORMALITY_WEIGHTS : List[float] = field(default_factory=lambda: [5.99, 0.46, 1.00])   # normal, mass, calcification
-    MOLECULAR_WEIGHTS   : List[float] = field(default_factory=lambda: [0.83, 0.36, 1.26, 1.33])  # LumA, LumB, HER2, TripNeg
+    # # ── Class weights (inverse-frequency, from training distribution) ────────────
+    # SEVERITY_WEIGHTS    : List[float] = field(default_factory=lambda: [0.32, 1.00, 2.68])   # Normal, Benign, Malignant
+    # DENSITY_WEIGHTS     : List[float] = field(default_factory=lambda: [2.19, 0.65, 0.44, 2.57])  # A, B, C, D
+    # BIRADS_WEIGHTS      : List[float] = field(default_factory=lambda: [0.62, 0.16, 0.57, 2.67, 2.92, 4.17])  # 0,1,2,3,4,5
+    # ABNORMALITY_WEIGHTS : List[float] = field(default_factory=lambda: [5.99, 0.46, 1.00])   # normal, mass, calcification
+    # MOLECULAR_WEIGHTS   : List[float] = field(default_factory=lambda: [0.83, 0.36, 1.26, 1.33])  # LumA, LumB, HER2, TripNeg
+
+    # ── Class weights without RSNA-Screening (inverse-frequency, from training distribution) ────────────
+    SEVERITY_WEIGHTS    : List[float] = field(default_factory=lambda: [0.676, 1.000, 2.202])         # Normal, Benign, Malignant
+    DENSITY_WEIGHTS     : List[float] = field(default_factory=lambda: [1.940, 0.761, 0.299, 1.456])  # A, B, C, D
+    BIRADS_WEIGHTS      : List[float] = field(default_factory=lambda: [8.328, 0.117, 0.277, 0.962, 1.041, 1.504])  # 0,1,2,3,4,5
+    ABNORMALITY_WEIGHTS : List[float] = field(default_factory=lambda: [6.020, 0.459, 1.000])         # normal, mass, calcification
+    MOLECULAR_WEIGHTS   : List[float] = field(default_factory=lambda: [0.819, 0.362, 1.283, 1.283])  # LumA, LumB, HER2, TripNeg
 
     # ── Optimiser / Scheduler ────────────────────────────────────────────
     LR: float = 5e-6
