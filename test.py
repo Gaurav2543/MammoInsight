@@ -52,6 +52,7 @@ from utils.metrics import (
     calculate_iou,
     plot_confusion_matrix,
     print_metrics_table,
+    print_classwise_metrics
 )
 from utils.saliency import compute_saliency_map
 
@@ -325,6 +326,8 @@ def main():
         pb = np.vstack(d["probs"])
         m, report = calculate_classification_metrics(t, p, pb, task, CLASS_NAMES[task], phase="test")
         all_metrics.update(m)
+        
+        print_classwise_metrics(report, task, CLASS_NAMES[task]) 
 
         # Save confusion matrix
         fig = plot_confusion_matrix(t, p, CLASS_NAMES[task], task)

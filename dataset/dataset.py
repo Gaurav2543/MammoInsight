@@ -92,7 +92,7 @@ class MammoBenchDataset(Dataset):
     ):
         full_df = pd.read_csv(csv_file)
         # exclude rsna-screening source_dataset
-        full_df = full_df[full_df["source_dataset"].str.lower() != "rsna-screening"]
+        # full_df = full_df[full_df["source_dataset"].str.lower() != "rsna-screening"]
         self.df = full_df[full_df["split"] == split].copy()
         print(f"[{split.upper()}] Loaded {len(self.df)} rows")
 

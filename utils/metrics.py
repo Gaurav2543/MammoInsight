@@ -17,7 +17,8 @@ from sklearn.metrics import (
     confusion_matrix,
     classification_report,
     roc_auc_score,
-    cohen_kappa_score
+    cohen_kappa_score,
+    precision_recall_fscore_support
 )
 
 ORDINAL_TASKS = {"classification", "density", "birads"} 
@@ -137,3 +138,101 @@ def print_metrics_table(metrics_dict, task_names, phase="val"):
         print(f"{t:<15} | {acc:<7.4f} | {bal_acc:<7.4f} | {f1m:<7.4f} | {f1w:<7.4f} | "
               f"{mcc:<7.4f} | {auc:<7.4f} | {wck_str}")
         
+def calculate_classification_metrics(
+    targets, preds, probs, task_name, class_names, phase="val"
+):
+    if len(targets) == 0:
+        return {}, {}
+
+    present = sorted(set(targets) | set(preds))
+    present_names = [class_names[i] for i in present if i < len(class_names)]
+
+    acc = accuracy_score(targets, preds)
+    bal = balanced_accuracy_score(targets, preds)
+    f1m = f1_score(targets, preds, average="macro", labels=present, zero_division=0)
+    f1w = f1_score(targets, preds, average="weighted", labels=present, zero_division=0)
+    mcc = matthews_corrcoef(targets, preds)
+
+    try:
+        auc = (
+            roc_auc_score(targets, probs[:, 1])
+            if len(present) == 2
+            else roc_auc_score(targets, probs, multi_class="ovr",
+                               labels=present, average="macro")
+        )
+    except Exception:
+        auc = 0.0
+
+    metrics = {
+        f"{phase}/{task_name}_acc": acc,
+        f"{phase}/{task_name}_bal_acc": bal,
+        f"{phase}/{task_name}_f1_macro": f1m,
+        f"{phase}/{task_name}_f1_weighted": f1w,
+        f"{phase}/{task_name}_mcc": mcc,
+        f"{phase}/{task_name}_auc": auc,
+    }
+
+    if task_name in ORDINAL_TASKS:
+        try:
+            wck = cohen_kappa_score(targets, preds, weights="quadratic")
+        except Exception:
+            wck = 0.0
+        metrics[f"{phase}/{task_name}_wck"] = wck
+
+    # ── Per-class metrics ──────────────────────────────────────────────
+    cm = confusion_matrix(targets, preds, labels=list(range(len(class_names))))
+    per_class = {}
+    for i, cname in enumerate(class_names):
+        tp = cm[i, i]
+        fp = cm[:, i].sum() - tp
+        fn = cm[i, :].sum() - tp
+        tn = cm.sum() - tp - fp - fn
+
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        recall    = tp / (tp + fn) if (tp + fn) > 0 else 0.0   # Sensitivity
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+        f1 = (2 * precision * recall / (precision + recall)
+              if (precision + recall) > 0 else 0.0)
+
+        per_class[cname] = {
+            "precision":   precision,
+            "recall":      recall,       # Sensitivity
+            "specificity": specificity,
+            "f1":          f1,
+        }
+        # Also store in flat metrics dict for JSON export
+        metrics[f"{phase}/{task_name}_{cname}_precision"]   = precision
+        metrics[f"{phase}/{task_name}_{cname}_recall"]      = recall
+        metrics[f"{phase}/{task_name}_{cname}_specificity"] = specificity
+        metrics[f"{phase}/{task_name}_{cname}_f1"]          = f1
+
+    report = classification_report(
+        targets, preds, labels=list(range(len(class_names))),
+        target_names=class_names, zero_division=0, output_dict=True,
+    )
+    # Attach per_class to report so callers can access it
+    report["_per_class"] = per_class
+    return metrics, report
+
+def print_classwise_metrics(report_dict, task_name, class_names):
+    """Print per-class Precision, Recall (Sensitivity), Specificity, F1."""
+    per_class = report_dict.get("_per_class", {})
+    if not per_class:
+        return
+
+    col_w = 13
+    header_cls = f"{'Class':<{col_w}}"
+    print(f"\n  Per-Class Metrics — {task_name}")
+    print(f"  {header_cls} | {'Precision':>10} | {'Recall/Sens':>11} | {'Specificity':>11} | {'F1':>8}")
+    print("  " + "-" * 62)
+    for cname in class_names:
+        if cname not in per_class:
+            continue
+        m = per_class[cname]
+        print(
+            f"  {cname:<{col_w}} | "
+            f"{m['precision']:>10.4f} | "
+            f"{m['recall']:>11.4f} | "
+            f"{m['specificity']:>11.4f} | "
+            f"{m['f1']:>8.4f}"
+        )
