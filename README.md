@@ -1,11 +1,11 @@
-# MammoFormer
+# MammoInsight
 
 Multi-task mammography foundation model with pluggable backbone, fusion, pooling, and loss.
 
 ## Project Structure
 
 ```
-mammoformer/
+mammoinsight/
 ├── configs/
 │   └── config.py                       # All flags & hyperparameters
 ├── dataset/
@@ -19,7 +19,7 @@ mammoformer/
 │   ├── metrics.py                       # Classification metrics, confusion matrices
 │   └── saliency.py                      # Post-hoc GradCAM / GradCAM++ / ScoreCAM
 ├── notebooks/
-│   └── mammoformer_explorer.ipynb       # Interactive evaluation & explainability
+│   └── mammoinsight_explorer.ipynb       # Interactive evaluation & explainability
 ├── train.py                             # Training script
 ├── test.py                              # Evaluation script (metrics + saliency export)
 ├── sweep.py                             # W&B hyperparameter search
@@ -96,7 +96,7 @@ Outputs: `test_results/predictions_test.csv`, `metrics_test.json`, and confusion
 
 ## Interactive Notebook
 
-Open `notebooks/mammoformer_explorer.ipynb` for:
+Open `notebooks/mammoinsight_explorer.ipynb` for:
 - Architecture walkthrough with parameter breakdown
 - Per-task confusion matrices and ROC curves
 - Saliency map visualisation (GradCAM / GradCAM++ / ScoreCAM)
